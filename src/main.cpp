@@ -6,6 +6,9 @@
 #include "projutils/projutils.hpp"
 #include "config.hpp"
 
+#include "sensors/temp_sensor_dht22.hpp"
+#include "bot/telegram_bot.hpp"
+
 using namespace pliskin;
 
 /** Wifi authentication **
@@ -16,11 +19,15 @@ using namespace pliskin;
  * 
  * const char* ssid = "<YourSSIDhere>";
  * const char* password = "<YourPasswordHere>";
+ * #define TELEGRAM_HEATER_BOT_TOKEN "<YourAccessTokenHere>"
+ * #define TELEGRAM_HEATER_BOT_CHAT 12345678
  */
 #include "../../../../../../wifiauth2.h"
 
 static bool mDNS_init_ok = false;
 WiFiClient client;
+static temp_dht sensor_temp_dht;
+static telegram_bot bot;
 
 void setup() {
   #ifndef DEBUG_PRINT
@@ -29,11 +36,9 @@ void setup() {
   Serial.begin(115200);
   #endif
 
+  sensor_temp_dht.setup(5, DHTesp::DHT22); // that is pin "D1" on a Wemos D1 (next to the "RX" pin)
+
   // Wifi
-  IPAddress local_IP(192, 168, 0, 50);
-  IPAddress gateway(192, 168, 0, 1);
-  IPAddress subnet(255, 255, 255, 0);
-  IPAddress dns(1, 1, 1, 1);
   WiFi.hostname(DEVICENAME);
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
@@ -58,6 +63,8 @@ void setup() {
 
   // OTA
   ota::begin(DEVICENAME);
+
+  bot.setup();
 }
 
 void loop() {
@@ -80,8 +87,11 @@ void loop() {
   // program logic
   if (time >= next)
   {
-    next = time + 10000;
+    next = time + 1000;
     dprintf("Systime: %lu ms; WLAN: %sconnected (as %s)\n", time, (connected ? "":"dis"), WiFi.localIP().toString().c_str());
+    sensor_temp_dht.getTemperature();
+    sensor_temp_dht.debug_print();
+    Serial.println(sensor_temp_dht.getStatusString());
 
     if (connected)
     {
@@ -90,6 +100,8 @@ void loop() {
     else
       WiFi.reconnect();
   }
+
+  bot.loop();
 
   yield();
 }
