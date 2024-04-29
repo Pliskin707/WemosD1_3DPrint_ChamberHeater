@@ -2,43 +2,34 @@
 #define __TEMP_SENSOR_DHT22_HPP__
 
 #include "DHTesp.h"
+#include "temp_sensor_interface.hpp"
 
 namespace pliskin
 {
 
-class temp_dht : public DHTesp
+class temp_dht : public DHTesp, public TempSensorInterface
 {
-    private:
-        float _temp_min  = 80.0f;
-        float _temp_max  = -50.0f;
-        float _temp_last = 0.0f;
-
     public:
-        using DHTesp::DHT22;
-
-        void debug_print (void)
+        void setup (const uint8_t pin) override
         {
-            const div_t
-                now = div((int) (100.0f * _temp_last), 100),
-                min = div((int) (100.0f * _temp_min), 100),
-                max = div((int) (100.0f * _temp_max), 100);
-
-            Serial.printf_P(PSTR("Temp: %d.%02d C (min: %d.%02d, max: %d.%02d)\n"), now.quot, now.rem, min.quot, min.rem, max.quot, max.rem);
+            DHTesp::setup(pin, DHTesp::DHT22);
         }
 
-        float getTemperature (void)
+        void loop (void) override
         {
-            const float 
-                temp_now = DHTesp::getTemperature();
-
-            if (!isnanf(_temp_last))
+            if (getDataAge() > 200uL)
             {
-                _temp_last = temp_now;
-                _temp_min  = std::min(_temp_min, _temp_last);
-                _temp_max  = std::max(_temp_max, _temp_last);
-            }
+                const float 
+                    tempNow = DHTesp::getTemperature();
 
-            return _temp_last;
+                if (!isnanf(tempNow))
+                    _updateTemp(tempNow);
+            }
+        }
+
+        bool isConnected (void) override
+        {
+            return getStatus() == DHTesp::ERROR_NONE;
         }
 };
 

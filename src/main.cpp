@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <array>
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -7,6 +8,7 @@
 #include "config.hpp"
 
 #include "sensors/temp_sensor_dht22.hpp"
+#include "sensors/temp_sensor_DS18B20.hpp"
 #include "bot/telegram_bot.hpp"
 
 using namespace pliskin;
@@ -26,7 +28,8 @@ using namespace pliskin;
 
 static bool mDNS_init_ok = false;
 WiFiClient client;
-static temp_dht sensor_temp_dht;
+
+static const std::array<TempSensorInterface*, 2> tempSensors = {new temp_dht, new temp_ds18b20};
 static telegram_bot bot;
 
 void setup() {
@@ -36,7 +39,8 @@ void setup() {
   Serial.begin(115200);
   #endif
 
-  sensor_temp_dht.setup(5, DHTesp::DHT22); // that is pin "D1" on a Wemos D1 (next to the "RX" pin)
+  tempSensors[0]->setup(5); // DHT22 at pin "D1"
+  tempSensors[1]->setup(4); // DS18B20 at pin "D2"
 
   // Wifi
   WiFi.hostname(DEVICENAME);
@@ -88,10 +92,16 @@ void loop() {
   if (time >= next)
   {
     next = time + 1000;
-    dprintf("Systime: %lu ms; WLAN: %sconnected (as %s)\n", time, (connected ? "":"dis"), WiFi.localIP().toString().c_str());
-    sensor_temp_dht.getTemperature();
-    sensor_temp_dht.debug_print();
-    Serial.println(sensor_temp_dht.getStatusString());
+    dprintf("\nSystime: %lu ms; WLAN: %sconnected (as %s)\n", time, (connected ? "":"dis"), WiFi.localIP().toString().c_str());
+
+    uint_fast8_t sensor_ndx = 0;
+    for (auto& tempSensor : tempSensors)
+    {
+      dprintf("Sensor %u is %sconnected\n", sensor_ndx, (tempSensor->isConnected() ? "": "not "));
+      tempSensor->getTemperature();
+      tempSensor->debugPrint();
+      sensor_ndx++;
+    }
 
     if (connected)
     {
@@ -100,6 +110,9 @@ void loop() {
     else
       WiFi.reconnect();
   }
+
+  for (auto& tempSensor : tempSensors)
+    tempSensor->loop();
 
   bot.loop();
 
