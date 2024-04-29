@@ -16,6 +16,7 @@ class TempSensorInterface
         float _tempMin  = 80.0f;
         float _tempMax  = -50.0f;
         float _tempLast = 0.0f;
+        const uint8_t _pin;
 
         void _updateTemp (const float updatedTemp)
         {
@@ -27,9 +28,11 @@ class TempSensorInterface
         }
 
     public:
-        virtual void setup (const uint8_t pin) = 0;
+        TempSensorInterface(const uint8_t pin) : _pin(pin) {};
+
+        virtual void setup (void) = 0;
         virtual void loop (void) = 0;
-        virtual bool isConnected (void);
+        virtual bool isConnected (void) = 0;
 
         float getTemperature (void) const {return _tempLast;}
         uint32_t getDataAge (void) const {return millis() - _lastRead;}

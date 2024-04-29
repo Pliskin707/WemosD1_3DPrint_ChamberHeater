@@ -13,18 +13,18 @@ class temp_ds18b20 : public TempSensorInterface
     private:
         OneWire * _wire = nullptr;   // pin D2
         DallasTemperature * _dallas = nullptr;
-        uint32_t _lastRead = 0;
-        float _lastTemp = 0.0f;
         DeviceAddress _address;
         bool _addrFound = false;
 
     public:
-        void setup (const uint8_t pin) override
+        using TempSensorInterface::TempSensorInterface;
+
+        void setup (void) override
         {
             if (_wire)
                 return;
 
-            _wire = new OneWire(pin);
+            _wire = new OneWire(_pin);
             if (!_wire)
                 return;
 

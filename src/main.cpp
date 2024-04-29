@@ -29,7 +29,11 @@ using namespace pliskin;
 static bool mDNS_init_ok = false;
 WiFiClient client;
 
-static const std::array<TempSensorInterface*, 2> tempSensors = {new temp_dht, new temp_ds18b20};
+static const std::array<TempSensorInterface*, 2> tempSensors = 
+{
+  new temp_dht(5),      // DHT22 at pin "D1"
+  new temp_ds18b20(4)   // DS18B20 at pin "D2"
+};
 static telegram_bot bot;
 
 void setup() {
@@ -39,8 +43,8 @@ void setup() {
   Serial.begin(115200);
   #endif
 
-  tempSensors[0]->setup(5); // DHT22 at pin "D1"
-  tempSensors[1]->setup(4); // DS18B20 at pin "D2"
+  for (auto& tempSensor : tempSensors)
+    tempSensor->setup();
 
   // Wifi
   WiFi.hostname(DEVICENAME);

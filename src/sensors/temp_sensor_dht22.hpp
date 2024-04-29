@@ -10,9 +10,11 @@ namespace pliskin
 class temp_dht : public DHTesp, public TempSensorInterface
 {
     public:
-        void setup (const uint8_t pin) override
+        using TempSensorInterface::TempSensorInterface;
+
+        void setup (void) override
         {
-            DHTesp::setup(pin, DHTesp::DHT22);
+            DHTesp::setup(_pin, DHTesp::DHT22);
         }
 
         void loop (void) override
