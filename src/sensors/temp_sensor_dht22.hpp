@@ -7,32 +7,14 @@
 namespace pliskin
 {
 
-class temp_dht : public DHTesp, public TempSensorInterface
+class TempDht : public DHTesp, public TempSensorInterface
 {
     public:
         using TempSensorInterface::TempSensorInterface;
 
-        void setup (void) override
-        {
-            DHTesp::setup(_pin, DHTesp::DHT22);
-        }
-
-        void loop (void) override
-        {
-            if (getDataAge() > 200uL)
-            {
-                const float 
-                    tempNow = DHTesp::getTemperature();
-
-                if (!isnanf(tempNow))
-                    _updateTemp(tempNow);
-            }
-        }
-
-        bool isConnected (void) override
-        {
-            return getStatus() == DHTesp::ERROR_NONE;
-        }
+        void setup (void) override;
+        void loop (void) override;
+        bool isConnected (void) override;
 };
 
 };

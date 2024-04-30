@@ -31,10 +31,10 @@ WiFiClient client;
 
 static const std::array<TempSensorInterface*, 2> tempSensors = 
 {
-  new temp_dht(5),      // DHT22 at pin "D1"
-  new temp_ds18b20(4)   // DS18B20 at pin "D2"
+  new TempDht(5),      // DHT22 at pin "D1"
+  new TempDs18b20(4)   // DS18B20 at pin "D2"
 };
-static telegram_bot bot;
+static TelegramBot bot;
 
 void setup() {
   #ifndef DEBUG_PRINT
@@ -72,7 +72,7 @@ void setup() {
   // OTA
   ota::begin(DEVICENAME);
 
-  bot.setup();
+  bot.setup(TELEGRAM_HEATER_BOT_TOKEN);
 }
 
 void loop() {
