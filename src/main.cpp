@@ -10,6 +10,7 @@
 #include "sensors/temp_sensor_dht22.hpp"
 #include "sensors/temp_sensor_DS18B20.hpp"
 #include "bot/telegram_bot.hpp"
+#include "display/tft_display.hpp"
 
 using namespace pliskin;
 
@@ -35,6 +36,7 @@ static const std::array<TempSensorInterface*, 2> tempSensors =
   new TempDs18b20(4)   // DS18B20 at pin "D2"
 };
 static TelegramBot bot;
+static tftDisplay disp;
 
 void setup() {
   #ifndef DEBUG_PRINT
@@ -42,6 +44,8 @@ void setup() {
   #else
   Serial.begin(115200);
   #endif
+
+  disp.setup();
 
   for (auto& tempSensor : tempSensors)
     tempSensor->setup();
@@ -99,13 +103,17 @@ void loop() {
     dprintf("\nSystime: %lu ms; WLAN: %sconnected (as %s)\n", time, (connected ? "":"dis"), WiFi.localIP().toString().c_str());
 
     uint_fast8_t sensor_ndx = 0;
+    float temps[tempSensors.size()];
     for (auto& tempSensor : tempSensors)
     {
       dprintf("Sensor %u is %sconnected\n", sensor_ndx, (tempSensor->isConnected() ? "": "not "));
-      tempSensor->getTemperature();
+      temps[sensor_ndx] = tempSensor->getTemperature();
       tempSensor->debugPrint();
       sensor_ndx++;
     }
+
+    if (tempSensors.size() >= 2)
+      disp.setTemps(temps[0], temps[1]);
 
     if (connected)
     {
@@ -119,6 +127,7 @@ void loop() {
     tempSensor->loop();
 
   bot.loop();
+  disp.loop();
 
   yield();
 }
