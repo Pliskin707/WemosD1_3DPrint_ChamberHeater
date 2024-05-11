@@ -42,7 +42,7 @@ void setup() {
   #ifndef DEBUG_PRINT
   pinMode(LEDPIN, OUTPUT);
   #else
-  Serial.begin(115200);
+  Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
   #endif
 
   disp.setup();

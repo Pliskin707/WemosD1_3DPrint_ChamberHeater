@@ -6,21 +6,23 @@
 
 #define TFT_CABLE_SELECT    (2)     // "D4"
 #define TFT_DATA_REG        (16)    // "D0"
-#define TFT_RESET           (0)     // "D3"
 
 namespace pliskin
 {
 
-class tftDisplay : public Adafruit_ST7735
+class tftDisplay
 {
     private:
         uint32_t _next = 0;
         uint16_t _prevColor = ST7735_CYAN;
         int16_t _tempPosX = 0;
+        uint8_t _fontHeight = 0;
         float _temps[2] = {0.0f};
 
+        Adafruit_ST7735 _controller{TFT_CABLE_SELECT, TFT_DATA_REG, NOT_A_PIN};
+
     public:
-        tftDisplay() : Adafruit_ST7735(TFT_CABLE_SELECT, TFT_DATA_REG, NOT_A_PIN) {}
+        tftDisplay() {}
 
         void setup (void);
         void loop (void);
