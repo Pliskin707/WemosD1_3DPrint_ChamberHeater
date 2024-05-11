@@ -11,6 +11,7 @@
 #include "sensors/temp_sensor_DS18B20.hpp"
 #include "bot/telegram_bot.hpp"
 #include "display/tft_display.hpp"
+#include "fan_controller/fan_controller.hpp"
 
 using namespace pliskin;
 
@@ -32,11 +33,12 @@ WiFiClient client;
 
 static const std::array<TempSensorInterface*, 2> tempSensors = 
 {
-  new TempDht(5),      // DHT22 at pin "D1"
-  new TempDs18b20(4)   // DS18B20 at pin "D2"
+  new TempDht(D1),
+  new TempDs18b20(D2)
 };
 static TelegramBot bot;
 static tftDisplay disp;
+static FanController fan;
 
 void setup() {
   #ifndef DEBUG_PRINT
@@ -49,6 +51,10 @@ void setup() {
 
   for (auto& tempSensor : tempSensors)
     tempSensor->setup();
+
+  fan.setup();
+  fan.setPercent(10);
+  disp.setFanController(&fan);
 
   // Wifi
   WiFi.hostname(DEVICENAME);
@@ -81,7 +87,7 @@ void setup() {
 
 void loop() {
   const uint32_t time = millis();
-  static uint32_t next = 0;
+  static uint32_t next = 0, startFanMeasAt = 0;
 
   // Wifi status
   const bool connected = WiFi.isConnected();
@@ -112,6 +118,8 @@ void loop() {
       sensor_ndx++;
     }
 
+    dprintf("Fan: %d rpm\n", fan.getSpeedRpm());
+
     if (tempSensors.size() >= 2)
       disp.setTemps(temps[0], temps[1]);
 
@@ -126,8 +134,18 @@ void loop() {
   for (auto& tempSensor : tempSensors)
     tempSensor->loop();
 
+  fan.loop();
+
   bot.loop();
   disp.loop();
+  if (disp.frameUpdated())
+    startFanMeasAt = millis() + 400uL; // avoid noise
+
+  if ((millis() >= startFanMeasAt) && startFanMeasAt)
+  {
+    startFanMeasAt = 0;
+    fan.startMeasurement();
+  }
 
   yield();
 }
