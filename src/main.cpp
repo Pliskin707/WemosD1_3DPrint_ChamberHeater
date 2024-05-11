@@ -42,7 +42,7 @@ static FanController fan;
 
 void setup() {
   #ifndef DEBUG_PRINT
-  pinMode(LEDPIN, OUTPUT);
+  // pinMode(LEDPIN, OUTPUT);
   #else
   Serial.begin(115200, SERIAL_8N1, SERIAL_TX_ONLY);
   #endif
@@ -59,8 +59,8 @@ void setup() {
   // Wifi
   WiFi.hostname(DEVICENAME);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  wifi_set_sleep_type(NONE_SLEEP_T);
+  WiFi.begin(ssid2, password);
+  // wifi_set_sleep_type(NONE_SLEEP_T);
 
   wl_status_t wstat;
   while (true)
@@ -138,14 +138,6 @@ void loop() {
 
   bot.loop();
   disp.loop();
-  if (disp.frameUpdated())
-    startFanMeasAt = millis() + 400uL; // avoid noise
-
-  if ((millis() >= startFanMeasAt) && startFanMeasAt)
-  {
-    startFanMeasAt = 0;
-    fan.startMeasurement();
-  }
 
   yield();
 }

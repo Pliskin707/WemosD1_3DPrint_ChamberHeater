@@ -1,4 +1,5 @@
 #include "telegram_bot.hpp"
+#include "projutils/projutils.hpp"
 
 #define TBOT_COMMAND_PING   "/ping"
 
@@ -30,7 +31,9 @@ void TelegramBot::setup (const char * token)
         _bot.setMyCommands(TBOT_COMMAND_PING, "Responds with \"Pong\" if the bot is online");
     }
     else
-        Serial.print(F("Telegram bot failed\n"));
+    {
+        dprintf("Telegram bot failed\n");
+    }
 }
 
 void TelegramBot::loop (void)
@@ -57,7 +60,9 @@ void TelegramBot::loop (void)
     }
 
     if (!noMsgReceived)
-        Serial.printf_P(PSTR("Total telegram messages received: %u\n"), _totalMsgsReceived);
+    {
+        dprintf("Total telegram messages received: %u\n", _totalMsgsReceived);
+    }
 }
 
 void TelegramBot::_handleText (TBMessage& msg)

@@ -4,10 +4,15 @@ namespace pliskin
 {
 
 static volatile uint_fast16_t _fan_flanks = 0;
-static volatile uint32_t _fan_meas_start_time = 0;
+static volatile uint32_t _debounce_until = 0;
 IRAM_ATTR void _fan_meas_handler (void) 
 {
-    _fan_flanks++;
+    const auto millisNow = millis();
+
+    if (millisNow > _debounce_until)
+        _fan_flanks++;
+    
+    _debounce_until = millisNow + 4;
 }
 
 void FanController::setup(void)
@@ -26,10 +31,11 @@ void FanController::setup(void)
 void FanController::loop(void)
 {
     // measure for half a second only, so the noise from SPI and/or USART transmissions doesn't get caught
-    if (((millis() - _fan_meas_start_time) >= 500) && _fan_meas_start_time)
+    if (millis() > _next)
     {
-        _fan_meas_start_time = 0;
-        _avgRpm.addValue(_fan_flanks); // TODO *60;
+        _next = millis() + 1000;
+        _avgRpm.addValue(_fan_flanks * 60);
+        _fan_flanks = 0;
     }
 }
 
@@ -49,12 +55,6 @@ uint16_t FanController::getSpeedRpm (void) const
 {
     return (uint16_t) _avgRpm.getAvgValue();
     return _statusRpm;
-}
-
-void FanController::startMeasurement (void)
-{
-    _fan_flanks = 0;
-    _fan_meas_start_time = millis();
 }
 
 }

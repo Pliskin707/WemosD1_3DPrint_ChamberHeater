@@ -5,8 +5,9 @@
 #include "mavg.hpp"
 
 #define FAN_CONTROL_PIN (RX)
-// #define FAN_STATUS_PIN  (D6)
-#define FAN_STATUS_PIN  (D4)
+// #define FAN_STATUS_PIN  (A0)
+#define FAN_STATUS_PIN  (D6)
+// #define FAN_STATUS_PIN  (D4)
 
 namespace pliskin
 {
@@ -16,6 +17,7 @@ class FanController
     private:
         uint8_t _controlPercent = 100;
         uint16_t _statusRpm     = 0;
+        uint32_t _next          = 0;
         movingAverage _avgRpm{5};
 
     public:
@@ -23,7 +25,6 @@ class FanController
         void loop (void);
         void setPercent (uint8_t percent);
         uint16_t getSpeedRpm (void) const;
-        void startMeasurement (void);
 };
 
 }
